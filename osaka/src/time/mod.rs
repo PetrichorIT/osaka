@@ -38,7 +38,7 @@ impl SimTime {
     /// # Examples
     ///
     /// ```no_run
-    /// use des::prelude::SimTime;
+    /// use osaka::time::SimTime;
     ///
     /// let now = SimTime::now();
     /// ```

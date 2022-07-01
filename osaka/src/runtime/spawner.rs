@@ -1,11 +1,11 @@
 use super::context::EnterGuard;
 use super::handle::HandleInner;
 use super::task::{self, OwnedTasks, Schedule};
-use crate::pin;
 use crate::sync::notify::Notify;
 use crate::util::atomic_cell::AtomicCell;
 use crate::util::{poll_fn, waker_ref, Wake, WakerRef};
 use crate::{adapter::Mutex, scoped_thread_local, task::JoinHandle};
+use crate::{pin, scope};
 use std::sync::atomic::{AtomicBool, Ordering::*};
 use std::task::Poll::*;
 use std::{cell::RefCell, collections::VecDeque, fmt, future::Future, sync::Arc};
@@ -60,40 +60,54 @@ impl BasicScheduler {
         &self.spawner
     }
 
-    #[track_caller]
-    pub(crate) fn block_on<F: Future>(&self, future: F) -> F::Output {
-        pin!(future);
-
-        // Attempt to steal the scheduler core and block_on the future if we can
-        // there, otherwise, lets select on a notification that the core is
-        // available or the future is complete.
-        loop {
-            if let Some(core) = self.take_core() {
-                return core.block_on(future);
-            } else {
-                let mut enter = crate::runtime::enter(false);
-
-                let notified = self.notify.notified();
-                pin!(notified);
-
-                if let Some(out) = enter
-                    .block_on(poll_fn(|cx| {
-                        if notified.as_mut().poll(cx).is_ready() {
-                            return Ready(None);
-                        }
-
-                        if let Ready(out) = future.as_mut().poll(cx) {
-                            return Ready(Some(out));
-                        }
-
-                        Pending
-                    }))
-                    .expect("Failed to `Enter::block_on`")
-                {
-                    return out;
+    pub(crate) fn poll_until_deadlock(&self) {
+        scope!("BasicScheduler::poll_until_deadlock" => {
+            loop {
+                if let Some(core) = self.take_core() {
+                    return core.poll_until_deadlock()
+                } else {
+                    panic!("HUH")
                 }
             }
-        }
+        })
+    }
+
+    #[track_caller]
+    pub(crate) fn block_on<F: Future>(&self, future: F) -> Result<F::Output, BlockOnError> {
+        scope!("BasicScheduler::block_on" => {
+            pin!(future);
+
+            // Attempt to steal the scheduler core and block_on the future if we can
+            // there, otherwise, lets select on a notification that the core is
+            // available or the future is complete.
+            loop {
+                if let Some(core) = self.take_core() {
+                    return core.block_on(future);
+                } else {
+                    let mut enter = crate::runtime::enter(false);
+
+                    let notified = self.notify.notified();
+                    pin!(notified);
+
+                    if let Some(out) = enter
+                        .block_on(poll_fn(|cx| {
+                            if notified.as_mut().poll(cx).is_ready() {
+                                return Ready(None);
+                            }
+
+                            if let Ready(out) = future.as_mut().poll(cx) {
+                                return Ready(Some(out));
+                            }
+
+                            Pending
+                        }))
+                        .expect("Failed to `Enter::block_on`")
+                    {
+                        return Ok(out);
+                    }
+                }
+            }
+        })
     }
 
     fn take_core(&self) -> Option<CoreGuard<'_>> {
@@ -115,45 +129,47 @@ impl BasicScheduler {
 
 impl Drop for BasicScheduler {
     fn drop(&mut self) {
-        // Avoid a double panic if we are currently panicking and
-        // the lock may be poisoned.
+        scope!("BasicScheduler::drop" => {
+            // Avoid a double panic if we are currently panicking and
+            // the lock may be poisoned.
 
-        let core = match self.take_core() {
-            Some(core) => core,
-            None if std::thread::panicking() => return,
-            None => panic!("Oh no! We never placed the Core back, this is a bug!"),
-        };
+            let core = match self.take_core() {
+                Some(core) => core,
+                None if std::thread::panicking() => return,
+                None => panic!("Oh no! We never placed the Core back, this is a bug!"),
+            };
 
-        core.enter(|mut core, context| {
-            // Drain the OwnedTasks collection. This call also closes the
-            // collection, ensuring that no tasks are ever pushed after this
-            // call returns.
-            context.spawner.shared.owned.close_and_shutdown_all();
+            core.enter(|mut core, context| {
+                // Drain the OwnedTasks collection. This call also closes the
+                // collection, ensuring that no tasks are ever pushed after this
+                // call returns.
+                context.spawner.shared.owned.close_and_shutdown_all();
 
-            // Drain local queue
-            // We already shut down every task, so we just need to drop the task.
-            while let Some(task) = core.pop_task() {
-                drop(task);
-            }
-
-            // Drain remote queue and set it to None
-            let remote_queue = core.spawner.shared.queue.lock().take();
-
-            // Using `Option::take` to replace the shared queue with `None`.
-            // We already shut down every task, so we just need to drop the task.
-            if let Some(remote_queue) = remote_queue {
-                for task in remote_queue {
+                // Drain local queue
+                // We already shut down every task, so we just need to drop the task.
+                while let Some(task) = core.pop_task() {
                     drop(task);
                 }
-            }
 
-            assert!(context.spawner.shared.owned.is_empty());
+                // Drain remote queue and set it to None
+                let remote_queue = core.spawner.shared.queue.lock().take();
 
-            // Submit metrics
-            // core.metrics.submit(&core.spawner.shared.worker_metrics);
+                // Using `Option::take` to replace the shared queue with `None`.
+                // We already shut down every task, so we just need to drop the task.
+                if let Some(remote_queue) = remote_queue {
+                    for task in remote_queue {
+                        drop(task);
+                    }
+                }
 
-            (core, ())
-        });
+                assert!(context.spawner.shared.owned.is_empty());
+
+                // Submit metrics
+                // core.metrics.submit(&core.spawner.shared.worker_metrics);
+
+                (core, ())
+            });
+        })
     }
 }
 
@@ -296,17 +312,19 @@ impl Context {
     }
 
     fn enter<R>(&self, core: Box<Core>, f: impl FnOnce() -> R) -> (Box<Core>, R) {
-        // Store the scheduler core in the thread-local context
-        //
-        // A drop-guard is employed at a higher level.
-        *self.core.borrow_mut() = Some(core);
+        scope!("Context::enter" => {
+                // Store the scheduler core in the thread-local context
+                //
+                // A drop-guard is employed at a higher level.
+                *self.core.borrow_mut() = Some(core);
 
-        // Execute the closure while tracking the execution budget
-        let ret = f();
+                // Execute the closure while tracking the execution budget
+                let ret = f();
 
-        // Take the scheduler core back
-        let core = self.core.borrow_mut().take().expect("core missing");
-        (core, ret)
+                // Take the scheduler core back
+                let core = self.core.borrow_mut().take().expect("core missing");
+                (core, ret)
+        })
     }
 }
 
@@ -348,77 +366,159 @@ struct CoreGuard<'a> {
 }
 
 impl CoreGuard<'_> {
-    #[track_caller]
-    fn block_on<F: Future>(self, future: F) -> F::Output {
-        let ret = self.enter(|mut core, context| {
-            let _enter = crate::runtime::enter(false);
-            let waker = context.spawner.waker_ref();
-            let mut cx = std::task::Context::from_waker(&waker);
+    fn poll_until_deadlock(self) {
+        scope!("CoreGuard::poll_until_deadlock" => {
+            self.enter(|mut core, context| {
+                let _enter = crate::runtime::enter(false);
 
-            pin!(future);
+                // Future must not be pinned since there is no future
 
-            'outer: loop {
-                if core.spawner.reset_woken() {
-                    let (c, res) = context.enter(core, || future.as_mut().poll(&mut cx));
-
-                    core = c;
-
-                    if let Ready(v) = res {
-                        return (core, Some(v));
-                    }
-                }
-
-                //for _ in 0..core.spawner.shared.config.event_interval
-                for _ in 0..10 {
-                    // Make sure we didn't hit an unhandled_panic
-                    if core.unhandled_panic {
-                        return (core, None);
-                    }
-
-                    // Get and increment the current tick
-                    let tick = core.tick;
-                    core.tick = core.tick.wrapping_add(1);
-
-                    // if tick % core.spawner.shared.config.global_queue_interval == 0
-                    let entry = if tick % 5 == 0 {
-                        core.spawner.pop().or_else(|| core.tasks.pop_front())
-                    } else {
-                        core.tasks.pop_front().or_else(|| core.spawner.pop())
-                    };
-
-                    let task = match entry {
-                        Some(entry) => entry,
-                        None => {
-                            // TODO does that fix it ?
-                            // core = context.park(core);
-
-                            // Try polling the `block_on` future next
-                            continue 'outer;
+                'outer: loop {
+                    // Progress counter
+                    let mut c = 0;
+                    for _i in 0..10 {
+                        // Make sure we didn't hit an unhandled_panic
+                        if core.unhandled_panic {
+                            return (core, ());
                         }
-                    };
 
-                    let task = context.spawner.shared.owned.assert_owner(task);
+                        // Get and increment the current tick
+                        let tick = core.tick;
+                        core.tick = core.tick.wrapping_add(1);
 
-                    let (c, _) = context.run_task(core, || {
-                        task.run();
-                    });
+                        // if tick % core.spawner.shared.config.global_queue_interval == 0
+                        let entry = if tick % 5 == 0 {
+                            core.spawner.pop().or_else(|| core.tasks.pop_front())
+                        } else {
+                            core.tasks.pop_front().or_else(|| core.spawner.pop())
+                        };
 
-                    core = c;
+                        let task = match entry {
+                            Some(entry) => entry,
+                            None => {
+                                // TODO does that fix it ?
+                                // core = context.park(core);
+
+                                // This should act as a deadlock detection.
+                                if c == 0  {
+                                    return (core, ());
+                                } else {
+                                    continue 'outer;
+                                }
+
+
+                                // Try polling the `block_on` future next
+                                // continue 'outer;
+                            }
+                        };
+
+                        let task = context.spawner.shared.owned.assert_owner(task);
+
+                        let (c, _) = scope!("CoreGuard::block_on::run_task" => context.run_task(core, || {
+                            c += 1;
+                            task.run();
+                        }));
+
+
+                        core = c;
+                    }
                 }
+            });
+        })
+    }
 
-                // Yield to the driver, this drives the timer and pulls any
-                // pending I/O events.
-                core = context.park_yield(core);
-            }
-        });
+    #[track_caller]
+    fn block_on<F: Future>(self, future: F) -> Result<F::Output, BlockOnError> {
+        scope!("CoreGuard::block_on" => {
+            let ret = self.enter(|mut core, context| {
+                    let _enter = crate::runtime::enter(false);
+                    let waker = context.spawner.waker_ref();
+                    let mut cx = std::task::Context::from_waker(&waker);
 
-        match ret {
-            Some(ret) => ret,
-            None => {
-                // `block_on` panicked.
-                panic!("a spawned task panicked and the runtime is configured to shut down on unhandled panic");
+                    pin!(future);
+
+                    'outer: loop {
+                        // Progress count
+                        let mut c = 0;
+
+                        if core.spawner.reset_woken() {
+                            let (c, res) = scope!("CoreGuard::block_on::reset_woken_poll" => {
+                                c += 1;
+                                context.enter(core, || future.as_mut().poll(&mut cx))
+                            });
+
+                            core = c;
+
+                            if let Ready(v) = res {
+                                return (core, Some(v));
+                            }
+                        }
+
+                        //for _ in 0..core.spawner.shared.config.event_interval
+
+                        let i_max = 10;
+                        for _i in 0..i_max {
+                            // Make sure we didn't hit an unhandled_panic
+                            if core.unhandled_panic {
+                                return (core, None);
+                            }
+
+                            // Get and increment the current tick
+                            let tick = core.tick;
+                            core.tick = core.tick.wrapping_add(1);
+
+                            // if tick % core.spawner.shared.config.global_queue_interval == 0
+                            let entry = if tick % 5 == 0 {
+                                core.spawner.pop().or_else(|| core.tasks.pop_front())
+                            } else {
+                                core.tasks.pop_front().or_else(|| core.spawner.pop())
+                            };
+
+                            let task = match entry {
+                                Some(entry) => entry,
+                                None => {
+                                    // TODO does that fix it ?
+                                    // core = context.park(core);
+
+                                    // This should act as a deadlock detection.
+                                    if c == 0  {
+                                        return (core, None);
+                                    } else {
+                                        continue 'outer;
+                                    }
+
+
+                                    // Try polling the `block_on` future next
+                                    // continue 'outer;
+                                }
+                            };
+
+                            let task = context.spawner.shared.owned.assert_owner(task);
+
+                            let (c, _) = scope!("CoreGuard::block_on::run_task" => context.run_task(core, || {
+                                c += 1;
+                                task.run();
+                            }));
+
+
+                            core = c;
+                        }
+
+                        // Yield to the driver, this drives the timer and pulls any
+                        // pending I/O events.
+                        core = context.park_yield(core);
+                    }
+                });
+
+            match ret {
+                Some(ret) => Ok(ret),
+                None => {
+                    // `block_on` panicked.
+                    return Err(BlockOnError::Deadlock);
+                    // panic!("a spawned task panicked and the runtime is configured to shut down on unhandled panic");
+                }
             }
-        }
+        })
     }
 
     /// Enters the scheduler context. This sets the queue and other necessary
@@ -427,15 +527,17 @@ impl CoreGuard<'_> {
     where
         F: FnOnce(Box<Core>, &Context) -> (Box<Core>, R),
     {
-        // Remove `core` from `context` to pass into the closure.
-        let core = self.context.core.borrow_mut().take().expect("core missing");
+        scope!("CoreGuard::enter" => {
+            // Remove `core` from `context` to pass into the closure.
+            let core = self.context.core.borrow_mut().take().expect("core missing");
 
-        // Call the closure and place `core` back
-        let (core, ret) = CURRENT.set(&self.context, || f(core, &self.context));
+            // Call the closure and place `core` back
+            let (core, ret) = CURRENT.set(&self.context, || f(core, &self.context));
 
-        *self.context.core.borrow_mut() = Some(core);
+            *self.context.core.borrow_mut() = Some(core);
 
-        ret
+            ret
+        })
     }
 }
 
@@ -449,5 +551,16 @@ impl Drop for CoreGuard<'_> {
             // Wake up other possible threads that could steal the driver.
             self.basic_scheduler.notify.notify_one()
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BlockOnError {
+    Deadlock,
+}
+
+impl std::fmt::Display for BlockOnError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "BlockOnError::Deadlock")
     }
 }

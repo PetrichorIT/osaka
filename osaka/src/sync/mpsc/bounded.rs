@@ -92,14 +92,14 @@ pub struct Receiver<T> {
 ///     osaka::spawn(async move {
 ///         for i in 0..10 {
 ///             if let Err(_) = tx.send(i).await {
-///                 tprintln!("receiver dropped");
+///                 println!("receiver dropped");
 ///                 return;
 ///             }
 ///         }
 ///     });
 ///
 ///     while let Some(i) = rx.recv().await {
-///         tprintln!("got = {}", i);
+///         println!("got = {}", i);
 ///     }
 /// }
 /// ```
@@ -317,7 +317,7 @@ impl<T> Receiver<T> {
     ///     rx.close();
     ///
     ///     while let Some(msg) = rx.recv().await {
-    ///         tprintln!("got {}", msg);
+    ///         println!("got {}", msg);
     ///     }
     ///
     ///     // Channel closed and no messages are lost.
@@ -412,14 +412,14 @@ impl<T> Sender<T> {
     ///     osaka::spawn(async move {
     ///         for i in 0..10 {
     ///             if let Err(_) = tx.send(i).await {
-    ///                 tprintln!("receiver dropped");
+    ///                 println!("receiver dropped");
     ///                 return;
     ///             }
     ///         }
     ///     });
     ///
     ///     while let Some(i) = rx.recv().await {
-    ///         tprintln!("got = {}", i);
+    ///         println!("got = {}", i);
     ///     }
     /// }
     /// ```
@@ -466,7 +466,7 @@ impl<T> Sender<T> {
     ///         tx4.closed(),
     ///         tx5.closed()
     ///     );
-    ///     tprintln!("Receiver dropped");
+    ///     println!("Receiver dropped");
     /// }
     /// ```
     pub async fn closed(&self) {
@@ -519,15 +519,15 @@ impl<T> Sender<T> {
     ///
     ///     let mut msg;
     ///     msg = rx.recv().await.unwrap();
-    ///     tprintln!("message {} received", msg);
+    ///     println!("message {} received", msg);
     ///
     ///     msg = rx.recv().await.unwrap();
-    ///     tprintln!("message {} received", msg);
+    ///     println!("message {} received", msg);
     ///
     ///     // Third message may have never been sent
     ///     match rx.recv().await {
-    ///         Some(msg) => tprintln!("message {} received", msg),
-    ///         None => tprintln!("the third message was never sent"),
+    ///         Some(msg) => println!("message {} received", msg),
+    ///         None => println!("the third message was never sent"),
     ///     }
     /// }
     /// ```
@@ -582,14 +582,14 @@ impl<T> Sender<T> {
     ///     osaka::spawn(async move {
     ///         for i in 0..10 {
     ///             if let Err(e) = tx.send_timeout(i, Duration::from_millis(100)).await {
-    ///                 tprintln!("send error: #{:?}", e);
+    ///                 println!("send error: #{:?}", e);
     ///                 return;
     ///             }
     ///         }
     ///     });
     ///
     ///     while let Some(i) = rx.recv().await {
-    ///         tprintln!("got = {}", i);
+    ///         println!("got = {}", i);
     ///         sleep(Duration::from_millis(200)).await;
     ///     }
     /// }
@@ -629,7 +629,9 @@ impl<T> Sender<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    ///
+    /// *NOTE* No thread inseide a simulation
+    /// ```ignore
     /// use std::thread;
     /// use osaka::runtime::Runtime;
     /// use osaka::sync::mpsc;

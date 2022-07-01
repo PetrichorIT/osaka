@@ -21,13 +21,13 @@
 //!
 //!     osaka::spawn(async move {
 //!         if let Err(_) = tx.send(3) {
-//!             tprintln!("the receiver dropped");
+//!             println!("the receiver dropped");
 //!         }
 //!     });
 //!
 //!     match rx.await {
-//!         Ok(v) => tprintln!("got = {:?}", v),
-//!         Err(_) => tprintln!("the sender dropped"),
+//!         Ok(v) => println!("got = {:?}", v),
+//!         Err(_) => println!("the sender dropped"),
 //!     }
 //! }
 //! ```
@@ -48,7 +48,7 @@
 //!
 //!     match rx.await {
 //!         Ok(_) => panic!("This doesn't happen"),
-//!         Err(_) => tprintln!("the sender dropped"),
+//!         Err(_) => println!("the sender dropped"),
 //!     }
 //! }
 //! ```
@@ -78,7 +78,7 @@
 //!         osaka::select! {
 //!             _ = interval.tick() => tprintln!("Another 100ms"),
 //!             msg = &mut recv => {
-//!                 tprintln!("Got message: {}", msg.unwrap());
+//!                 println!("Got message: {}", msg.unwrap());
 //!                 break;
 //!             }
 //!         }
@@ -146,13 +146,13 @@ use std::task::{Context, Poll, Waker};
 ///
 ///     osaka::spawn(async move {
 ///         if let Err(_) = tx.send(3) {
-///             tprintln!("the receiver dropped");
+///             println!("the receiver dropped");
 ///         }
 ///     });
 ///
 ///     match rx.await {
-///         Ok(v) => tprintln!("got = {:?}", v),
-///         Err(_) => tprintln!("the sender dropped"),
+///         Ok(v) => println!("got = {:?}", v),
+///         Err(_) => println!("the sender dropped"),
 ///     }
 /// }
 /// ```
@@ -173,7 +173,7 @@ use std::task::{Context, Poll, Waker};
 ///
 ///     match rx.await {
 ///         Ok(_) => panic!("This doesn't happen"),
-///         Err(_) => tprintln!("the sender dropped"),
+///         Err(_) => println!("the sender dropped"),
 ///     }
 /// }
 /// ```
@@ -245,13 +245,13 @@ pub struct Sender<T> {
 ///
 ///     osaka::spawn(async move {
 ///         if let Err(_) = tx.send(3) {
-///             tprintln!("the receiver dropped");
+///             println!("the receiver dropped");
 ///         }
 ///     });
 ///
 ///     match rx.await {
-///         Ok(v) => tprintln!("got = {:?}", v),
-///         Err(_) => tprintln!("the sender dropped"),
+///         Ok(v) => println!("got = {:?}", v),
+///         Err(_) => println!("the sender dropped"),
 ///     }
 /// }
 /// ```
@@ -272,7 +272,7 @@ pub struct Sender<T> {
 ///
 ///     match rx.await {
 ///         Ok(_) => panic!("This doesn't happen"),
-///         Err(_) => tprintln!("the sender dropped"),
+///         Err(_) => println!("the sender dropped"),
 ///     }
 /// }
 /// ```
@@ -302,7 +302,7 @@ pub struct Sender<T> {
 ///         osaka::select! {
 ///             _ = interval.tick() => tprintln!("Another 100ms"),
 ///             msg = &mut recv => {
-///                 tprintln!("Got message: {}", msg.unwrap());
+///                 println!("Got message: {}", msg.unwrap());
 ///                 break;
 ///             }
 ///         }
@@ -440,13 +440,13 @@ struct State(usize);
 ///
 ///     osaka::spawn(async move {
 ///         if let Err(_) = tx.send(3) {
-///             tprintln!("the receiver dropped");
+///             println!("the receiver dropped");
 ///         }
 ///     });
 ///
 ///     match rx.await {
-///         Ok(v) => tprintln!("got = {:?}", v),
-///         Err(_) => tprintln!("the sender dropped"),
+///         Ok(v) => println!("got = {:?}", v),
+///         Err(_) => println!("the sender dropped"),
 ///     }
 /// }
 /// ```
@@ -499,13 +499,13 @@ impl<T> Sender<T> {
     ///
     ///     osaka::spawn(async move {
     ///         if let Err(_) = tx.send(3) {
-    ///             tprintln!("the receiver dropped");
+    ///             println!("the receiver dropped");
     ///         }
     ///     });
     ///
     ///     match rx.await {
-    ///         Ok(v) => tprintln!("got = {:?}", v),
-    ///         Err(_) => tprintln!("the sender dropped"),
+    ///         Ok(v) => println!("got = {:?}", v),
+    ///         Err(_) => println!("the sender dropped"),
     ///     }
     /// }
     /// ```
@@ -569,7 +569,7 @@ impl<T> Sender<T> {
     ///     });
     ///
     ///     tx.closed().await;
-    ///     tprintln!("the receiver dropped");
+    ///     println!("the receiver dropped");
     /// }
     /// ```
     ///
@@ -685,7 +685,7 @@ impl<T> Sender<T> {
     ///
     ///     poll_fn(|cx| tx.poll_closed(cx)).await;
     ///
-    ///     tprintln!("the receiver dropped");
+    ///     println!("the receiver dropped");
     /// }
     /// ```
     pub fn poll_closed(&mut self, cx: &mut Context<'_>) -> Poll<()> {

@@ -469,10 +469,10 @@ impl Semaphore {
     ///     osaka::spawn(async move {
     ///         let permit = semaphore.acquire_many(2).await;
     ///         assert!(permit.is_err());
-    ///         tprintln!("waiter received error");
+    ///         println!("waiter received error");
     ///     });
     ///
-    ///     tprintln!("closing semaphore");
+    ///     println!("closing semaphore");
     ///     semaphore2.close();
     ///
     ///     // Cannot obtain more permits

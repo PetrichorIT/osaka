@@ -66,7 +66,7 @@ use std::task::{Context, Poll, Waker};
 ///
 /// # async fn doc() {
 /// let join_handle: task::JoinHandle<()> = task::spawn(async {
-///     tprintln!("I return nothing.");
+///     println!("I return nothing.");
 /// });
 /// # }
 /// ```
@@ -124,12 +124,12 @@ use std::task::{Context, Poll, Waker};
 ///         // Here we sleep to make sure that the first task returns before.
 ///         time::sleep(Duration::from_millis(10)).await;
 ///         // This will be called, even though the JoinHandle is dropped.
-///         tprintln!("♫ Still alive ♫");
+///         println!("♫ Still alive ♫");
 ///     });
 /// });
 ///
 /// original_task.await.expect("The task being joined has panicked");
-/// tprintln!("Original task is joined.");
+/// println!("Original task is joined.");
 ///
 /// // We make sure that the new task has time to run, before the main
 /// // task returns.

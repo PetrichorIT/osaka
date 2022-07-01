@@ -335,7 +335,7 @@ impl<T> UnboundedSender<T> {
     ///         tx4.closed(),
     ///         tx5.closed()
     ///     );
-    ////     tprintln!("Receiver dropped");
+    ////     println!("Receiver dropped");
     /// }
     /// ```
     pub async fn closed(&self) {

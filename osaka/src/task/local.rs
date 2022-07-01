@@ -39,7 +39,7 @@ use pin_project_lite::pin_project;
 ///     // Since `osaka::spawn` requires the spawned future to implement `Send`, this
 ///     // will not compile.
 ///     osaka::spawn(async move {
-///         tprintln!("{}", unsend_data);
+///         println!("{}", unsend_data);
 ///         // ...
 ///     }).await.unwrap();
 /// }
@@ -69,7 +69,7 @@ use pin_project_lite::pin_project;
 ///         // `spawn_local` ensures that the future is spawned on the local
 ///         // task set.
 ///         task::spawn_local(async move {
-///             tprintln!("{}", unsend_data);
+///             println!("{}", unsend_data);
 ///             // ...
 ///         }).await.unwrap();
 ///     }).await;
@@ -99,12 +99,12 @@ use pin_project_lite::pin_project;
 ///     let unsend_data2 = unsend_data.clone();
 ///     local.spawn_local(async move {
 ///         // ...
-///         tprintln!("hello {}", unsend_data2)
+///         println!("hello {}", unsend_data2)
 ///     });
 ///
 ///     local.spawn_local(async move {
 ///         time::sleep(time::Duration::from_millis(100)).await;
-///         tprintln!("goodbye {}", unsend_data)
+///         println!("goodbye {}", unsend_data)
 ///     });
 ///
 ///     // ...
@@ -189,7 +189,7 @@ use pin_project_lite::pin_project;
 /// async fn run_task(task: Task) {
 ///     match task {
 ///         Task::PrintNumber(n) => {
-///             tprintln!("{}", n);
+///             println!("{}", n);
 ///         },
 ///         Task::AddOne(n, response) => {
 ///             // We ignore failures to send the response.
@@ -286,7 +286,7 @@ scoped_thread_local!(static CURRENT: Context);
 ///     local.run_until(async move {
 ///         let unsend_data = unsend_data.clone();
 ///         task::spawn_local(async move {
-///             tprintln!("{}", unsend_data);
+///             println!("{}", unsend_data);
 ///             // ...
 ///         }).await.unwrap();
 ///     }).await;

@@ -9,10 +9,18 @@ version = "0.1.0"
 name = "o-sleep"
 path = "bin/sleep_test.rs"
 
+[[bin]]
+name = "o-rt"
+path = "bin/rt.rs"
+
+[[bin]]
+name = "o-rtc"
+path = "bin/rt-channels.rs"
+
 [dependencies]
 colored = "2.0.0"
 libc = "0.2.126"
-osaka_derive = {path = "../osaka_derive"}
+osaka_macros = {path = "../osaka_macros"}
 pin-project-lite = "0.2.9"
 polling = "2.2.0"
 

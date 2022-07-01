@@ -15,9 +15,11 @@ use std::future::Future;
 
 pub(crate) use enter::enter;
 
+use crate::scope;
+
 use self::{
     handle::{EnterGuard, Handle},
-    spawner::BasicScheduler,
+    spawner::{BasicScheduler, BlockOnError},
     task::JoinHandle,
 };
 
@@ -71,13 +73,28 @@ impl Runtime {
         self.handle.spawn(future)
     }
 
+    pub fn poll_until_deadlock(&self) {
+        scope!("Runtime::poll_until_deadlock" => {
+            self.scheduler.poll_until_deadlock()
+        })
+    }
+
     pub fn block_on<F: Future>(&self, future: F) -> F::Output {
-        let _enter = self.enter();
-        self.scheduler.block_on(future)
+        scope!("Runtime::block_on" => {
+            let _enter = self.enter();
+            self.scheduler.block_on(future).expect("'block_on' entcountered deadlock")
+        })
+    }
+
+    pub fn block_on_or_deadline<F: Future>(&self, future: F) -> Result<F::Output, BlockOnError> {
+        scope!("Runtime::block_on" => {
+            let _enter = self.enter();
+            self.scheduler.block_on(future)
+        })
     }
 
     pub fn enter(&self) -> EnterGuard<'_> {
-        self.handle.enter()
+        scope!("Runtime::enter" => self.handle.enter())
     }
 }
 

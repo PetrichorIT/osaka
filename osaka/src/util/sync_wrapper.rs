@@ -3,7 +3,7 @@
 //!
 //! A similar primitive is provided in the `sync_wrapper` crate.
 
-pub(crate) struct SyncWrapper<T> {
+pub struct SyncWrapper<T> {
     value: T,
 }
 

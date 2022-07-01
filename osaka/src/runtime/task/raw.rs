@@ -1,5 +1,6 @@
 use crate::runtime::spawner::Shared;
 use crate::runtime::task::{Cell, Harness, Header, Id, State};
+use crate::scope;
 use std::future::Future;
 
 use std::ptr::NonNull;
@@ -144,25 +145,33 @@ impl Clone for RawTask {
 impl Copy for RawTask {}
 
 unsafe fn poll<T: Future>(ptr: NonNull<Header>) {
-    let harness = Harness::<T>::from_raw(ptr);
-    harness.poll();
+    scope!("vtable::poll" => {
+        let harness = Harness::<T>::from_raw(ptr);
+        harness.poll();
+    })
 }
 
 unsafe fn dealloc<T: Future>(ptr: NonNull<Header>) {
-    let harness = Harness::<T>::from_raw(ptr);
-    harness.dealloc();
+    scope!("vtable::dealloc" => {
+        let harness = Harness::<T>::from_raw(ptr);
+        harness.dealloc();
+    })
 }
 
 unsafe fn try_read_output<T: Future>(ptr: NonNull<Header>, dst: *mut (), waker: &Waker) {
-    let out = &mut *(dst as *mut Poll<super::Result<T::Output>>);
+    scope!("vtable::try_read_output" => {
+        let out = &mut *(dst as *mut Poll<super::Result<T::Output>>);
 
-    let harness = Harness::<T>::from_raw(ptr);
-    harness.try_read_output(out, waker);
+        let harness = Harness::<T>::from_raw(ptr);
+        harness.try_read_output(out, waker);
+    })
 }
 
 unsafe fn try_set_join_waker<T: Future>(ptr: NonNull<Header>, waker: &Waker) -> bool {
-    let harness = Harness::<T>::from_raw(ptr);
-    harness.try_set_join_waker(waker)
+    scope!("vtable::try_set_join_waker" => {
+        let harness = Harness::<T>::from_raw(ptr);
+        harness.try_set_join_waker(waker)
+    })
 }
 
 unsafe fn drop_join_handle_slow<T: Future>(ptr: NonNull<Header>) {

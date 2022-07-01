@@ -112,7 +112,7 @@ impl<T: 'static> LocalKey<T> {
     /// }
     ///
     /// NUMBER.scope(1, async move {
-    ///     tprintln!("task local value: {}", NUMBER.get());
+    ///     println!("task local value: {}", NUMBER.get());
     /// }).await;
     /// # }
     /// ```
@@ -141,7 +141,7 @@ impl<T: 'static> LocalKey<T> {
     /// }
     ///
     /// NUMBER.sync_scope(1, || {
-    ///     tprintln!("task local value: {}", NUMBER.get());
+    ///     println!("task local value: {}", NUMBER.get());
     /// });
     /// # }
     /// ```
@@ -226,7 +226,7 @@ pin_project! {
     /// }
     ///
     /// NUMBER.scope(1, async move {
-    ///     tprintln!("task local value: {}", NUMBER.get());
+    ///     println!("task local value: {}", NUMBER.get());
     /// }).await;
     /// # }
     /// ```

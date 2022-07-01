@@ -1,3 +1,5 @@
+use crate::scope;
+
 use super::{
     handle::{Handle, TryCurrentError},
     spawner::Spawner,
@@ -35,10 +37,12 @@ pub(crate) fn spawn_handle() -> Option<Spawner> {
 ///
 /// [`Handle`]: Handle
 pub(crate) fn enter(new: Handle) -> EnterGuard {
-    match try_enter(new) {
-        Some(guard) => guard,
-        None => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
-    }
+    scope!("context::EnterGuard::enter" =>
+        match try_enter(new) {
+            Some(guard) => guard,
+            None => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
+        }
+    )
 }
 
 /// Sets this [`Handle`] as the current active [`Handle`].

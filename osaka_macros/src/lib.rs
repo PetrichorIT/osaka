@@ -75,7 +75,7 @@ use proc_macro::TokenStream;
 /// ```ignore
 /// #[osaka::main]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -88,7 +88,7 @@ use proc_macro::TokenStream;
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -100,7 +100,7 @@ use proc_macro::TokenStream;
 /// ```ignore
 /// #[osaka::main(flavor = "current_thread")]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -113,7 +113,7 @@ use proc_macro::TokenStream;
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -123,7 +123,7 @@ use proc_macro::TokenStream;
 /// ```ignore
 /// #[osaka::main(worker_threads = 2)]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -137,7 +137,7 @@ use proc_macro::TokenStream;
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -147,7 +147,7 @@ use proc_macro::TokenStream;
 /// ```ignore
 /// #[osaka::main(flavor = "current_thread", start_paused = true)]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -161,7 +161,7 @@ use proc_macro::TokenStream;
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -175,7 +175,7 @@ use proc_macro::TokenStream;
 ///
 /// #[osaka1::main(crate = "osaka1")]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -190,7 +190,7 @@ use proc_macro::TokenStream;
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -215,7 +215,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 /// ```ignore
 /// #[osaka::main(flavor = "current_thread")]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -228,7 +228,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -240,7 +240,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// #[osaka1::main(crate = "osaka1")]
 /// async fn main() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 ///
@@ -255,7 +255,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 ///         .build()
 ///         .unwrap()
 ///         .block_on(async {
-///             tprintln!("Hello world");
+///             println!("Hello world");
 ///         })
 /// }
 /// ```
@@ -415,7 +415,7 @@ pub fn main_rt(args: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// #[osaka1::test(crate = "osaka1")]
 /// async fn my_test() {
-///     tprintln!("Hello world");
+///     println!("Hello world");
 /// }
 /// ```
 #[proc_macro_attribute]

@@ -17,9 +17,9 @@ use crate::sync::watch;
 ///     // The same messages will be printed together.
 ///     // You will NOT see any interleaving.
 ///     handles.push(osaka::spawn(async move {
-///         tprintln!("before wait");
+///         println!("before wait");
 ///         let wait_result = c.wait().await;
-///         tprintln!("after wait");
+///         println!("after wait");
 ///         wait_result
 ///     }));
 /// }

@@ -17,20 +17,20 @@ pub use task::spawn;
 /// intended to be used as part of the public API and is permitted to
 /// change.
 #[doc(hidden)]
-pub use osaka_derive::select_priv_declare_output_enum;
+pub use osaka_macros::select_priv_declare_output_enum;
 
 /// Implementation detail of the `select!` macro. This macro is **not**
 /// intended to be used as part of the public API and is permitted to
 /// change.
 #[doc(hidden)]
-pub use osaka_derive::select_priv_clean_pattern;
+pub use osaka_macros::select_priv_clean_pattern;
 
 #[doc(inline)]
-pub use osaka_derive::main_rt as main;
+pub use osaka_macros::main_rt as main;
 
 #[doc(inline)]
-pub use osaka_derive::test_rt as test;
+pub use osaka_macros::test_rt as test;
 
 mod adapter;
-mod macros;
-mod util;
+pub mod macros;
+pub mod util;

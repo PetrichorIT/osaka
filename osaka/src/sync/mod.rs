@@ -112,7 +112,7 @@
 //!     });
 //!
 //!     while let Some(res) = rx.recv().await {
-//!         tprintln!("got = {}", res);
+//!         println!("got = {}", res);
 //!     }
 //! }
 //! ```
@@ -220,7 +220,7 @@
 //!             cmd_tx.send((Increment, resp_tx)).await.ok().unwrap();
 //!             let res = resp_rx.await.unwrap();
 //!
-//!             tprintln!("previous value = {}", res);
+//!             println!("previous value = {}", res);
 //!         }));
 //!     }
 //!

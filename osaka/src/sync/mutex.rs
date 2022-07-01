@@ -80,7 +80,7 @@ use std::{fmt, marker, mem};
 ///             for j in 0..10 {
 ///                 let mut lock = my_count.lock().await;
 ///                 *lock += 1;
-///                 tprintln!("{} {} {}", i, j, lock);
+///                 println!("{} {} {}", i, j, lock);
 ///             }
 ///         });
 ///     }
@@ -90,7 +90,7 @@ use std::{fmt, marker, mem};
 ///             break;
 ///         }
 ///     }
-///     tprintln!("Count hit 50.");
+///     println!("Count hit 50.");
 /// }
 /// ```
 /// There are a few things of note here to pay attention to in this example.
@@ -611,11 +611,11 @@ impl<'a, T: ?Sized> MutexGuard<'a, T> {
     /// use osaka::sync::{Mutex, MutexGuard};
     ///
     /// async fn unlock_and_relock<'l>(guard: MutexGuard<'l, u32>) -> MutexGuard<'l, u32> {
-    ///     tprintln!("1. contains: {:?}", *guard);
+    ///     println!("1. contains: {:?}", *guard);
     ///     let mutex = MutexGuard::mutex(&guard);
     ///     drop(guard);
     ///     let guard = mutex.lock().await;
-    ///     tprintln!("2. contains: {:?}", *guard);
+    ///     println!("2. contains: {:?}", *guard);
     ///     guard
     /// }
     /// #
@@ -673,11 +673,11 @@ impl<T: ?Sized> OwnedMutexGuard<T> {
     /// use osaka::sync::{Mutex, OwnedMutexGuard};
     ///
     /// async fn unlock_and_relock(guard: OwnedMutexGuard<u32>) -> OwnedMutexGuard<u32> {
-    ///     tprintln!("1. contains: {:?}", *guard);
+    ///     println!("1. contains: {:?}", *guard);
     ///     let mutex: Arc<Mutex<u32>> = OwnedMutexGuard::mutex(&guard).clone();
     ///     drop(guard);
     ///     let guard = mutex.lock_owned().await;
-    ///     tprintln!("2. contains: {:?}", *guard);
+    ///     println!("2. contains: {:?}", *guard);
     ///     guard
     /// }
     /// #

@@ -2,5 +2,5 @@
 [workspace]
 members = [
   "osaka",
-  "osaka_derive",
+  "osaka_macros",
 ]

@@ -59,10 +59,10 @@ type WaitList = LinkedList<Waiter, <Waiter as Link>::Target>;
 ///
 ///     let handle = osaka::spawn(async move {
 ///         notify2.notified().await;
-///         tprintln!("received notification");
+///         println!("received notification");
 ///     });
 ///
-///     tprintln!("sending notification");
+///     println!("sending notification");
 ///     notify.notify_one();
 ///
 ///     // Wait for task to receive notification.
@@ -365,10 +365,10 @@ impl Notify {
     ///
     ///     osaka::spawn(async move {
     ///         notify2.notified().await;
-    ///         tprintln!("received notification");
+    ///         println!("received notification");
     ///     });
     ///
-    ///     tprintln!("sending notification");
+    ///     println!("sending notification");
     ///     notify.notify_one();
     /// }
     /// ```
@@ -415,10 +415,10 @@ impl Notify {
     ///
     ///     osaka::spawn(async move {
     ///         notify2.notified().await;
-    ///         tprintln!("received notification");
+    ///         println!("received notification");
     ///     });
     ///
-    ///     tprintln!("sending notification");
+    ///     println!("sending notification");
     ///     notify.notify_one();
     /// }
     /// ```
@@ -481,13 +481,13 @@ impl Notify {
     ///     let notified2 = notify.notified();
     ///
     ///     let handle = osaka::spawn(async move {
-    ///         tprintln!("sending notifications");
+    ///         println!("sending notifications");
     ///         notify2.notify_waiters();
     ///     });
     ///
     ///     notified1.await;
     ///     notified2.await;
-    ///     tprintln!("received notifications");
+    ///     println!("received notifications");
     /// }
     /// ```
     pub fn notify_waiters(&self) {

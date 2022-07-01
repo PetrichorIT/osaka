@@ -19,3 +19,6 @@ pub use wake::*;
 
 mod block_on;
 pub use block_on::*;
+
+mod log;
+pub use log::*;

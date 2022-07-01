@@ -16,7 +16,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let duration = Duration::ZERO;
     /// assert!(duration.is_zero());
@@ -34,7 +34,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::MAX, Duration::new(u64::MAX, 1_000_000_000 - 1));
     /// ```
@@ -54,7 +54,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let five_seconds = Duration::new(5, 0);
     /// ```
@@ -69,7 +69,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let duration = Duration::from_secs(5);
     ///
@@ -87,7 +87,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let duration = Duration::from_millis(2569);
     ///
@@ -105,7 +105,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let duration = Duration::from_micros(1_000_002);
     ///
@@ -123,7 +123,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let duration = Duration::from_nanos(1_000_000_123);
     ///
@@ -144,7 +144,7 @@ impl Duration {
     ///
     /// # Examples
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let res = Duration::from_secs_f64(0.0);
     /// assert_eq!(res, Duration::new(0, 0));
@@ -177,7 +177,7 @@ impl Duration {
     /// Basic usage:
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(0, 0).checked_add(Duration::new(0, 1)), Some(Duration::new(0, 1)));
     /// assert_eq!(Duration::new(1, 0).checked_add(Duration::new(u64::MAX, 0)), None);
@@ -194,7 +194,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(0, 0).saturating_add(Duration::new(0, 1)), Duration::new(0, 1));
     /// assert_eq!(Duration::new(1, 0).saturating_add(Duration::new(u64::MAX, 0)), Duration::MAX);
@@ -213,7 +213,7 @@ impl Duration {
     /// Basic usage:
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(0, 1).checked_sub(Duration::new(0, 0)), Some(Duration::new(0, 1)));
     /// assert_eq!(Duration::new(0, 0).checked_sub(Duration::new(0, 1)), None);
@@ -230,7 +230,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(0, 1).saturating_sub(Duration::new(0, 0)), Duration::new(0, 1));
     /// assert_eq!(Duration::new(0, 0).saturating_sub(Duration::new(0, 1)), Duration::ZERO);
@@ -249,7 +249,7 @@ impl Duration {
     /// Basic usage:
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(0, 500_000_001).checked_mul(2), Some(Duration::new(1, 2)));
     /// assert_eq!(Duration::new(u64::MAX - 1, 0).checked_mul(2), None);
@@ -266,7 +266,7 @@ impl Duration {
     /// # Examples
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(0, 500_000_001).saturating_mul(2), Duration::new(1, 2));
     /// assert_eq!(Duration::new(u64::MAX - 1, 0).saturating_mul(2), Duration::MAX);
@@ -285,7 +285,7 @@ impl Duration {
     /// Basic usage:
     ///
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// assert_eq!(Duration::new(2, 0).checked_div(2), Some(Duration::new(1, 0)));
     /// assert_eq!(Duration::new(1, 0).checked_div(2), Some(Duration::new(0, 500_000_000)));
@@ -303,7 +303,7 @@ impl Duration {
     ///
     /// # Examples
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let dur = Duration::new(2, 700_000_000);
     /// assert_eq!(dur.mul_f64(3.14), Duration::new(8, 478_000_000));
@@ -322,7 +322,7 @@ impl Duration {
     ///
     /// # Examples
     /// ```
-    /// use des::prelude::Duration;
+    /// use osaka::time::Duration;
     ///
     /// let dur = Duration::new(2, 700_000_000);
     /// assert_eq!(dur.div_f64(3.14), Duration::new(0, 859_872_611));

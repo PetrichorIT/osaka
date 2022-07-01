@@ -1,4 +1,5 @@
 use crate::{
+    scope,
     task::JoinHandle,
     util::error::{CONTEXT_MISSING_ERROR, THREAD_LOCAL_DESTROYED_ERROR},
 };
@@ -13,10 +14,12 @@ pub struct Handle {
 
 impl Handle {
     pub fn enter(&self) -> EnterGuard<'_> {
-        EnterGuard {
-            _guard: context::enter(self.clone()),
-            _handle_lifetime: PhantomData,
-        }
+        scope!("Handle::enter" =>
+            EnterGuard {
+                _guard: context::enter(self.clone()),
+                _handle_lifetime: PhantomData,
+            }
+        )
     }
 
     #[track_caller]

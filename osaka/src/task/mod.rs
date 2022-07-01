@@ -207,12 +207,12 @@
 //! async {
 //!     task::spawn(async {
 //!         // ...
-//!         tprintln!("spawned task done!")
+//!         println!("spawned task done!")
 //!     });
 //!
 //!     // Yield, allowing the newly-spawned task to execute first.
 //!     task::yield_now().await;
-//!     tprintln!("main task done!");
+//!     println!("main task done!");
 //! }
 //! # .await;
 //! # }

@@ -22,7 +22,7 @@
 //!
 //!     osaka::spawn(async move {
 //!         while rx.changed().await.is_ok() {
-//!             tprintln!("received = {:?}", *rx.borrow());
+//!             println!("received = {:?}", *rx.borrow());
 //!         }
 //!     });
 //!
@@ -250,7 +250,7 @@ mod state {
 ///
 ///     osaka::spawn(async move {
 ///         while rx.changed().await.is_ok() {
-///             tprintln!("received = {:?}", *rx.borrow());
+///             println!("received = {:?}", *rx.borrow());
 ///         }
 ///     });
 ///
@@ -762,7 +762,7 @@ impl<T> Sender<T> {
     ///
     ///     // Waits for `rx` to drop
     ///     tx.closed().await;
-    ///     tprintln!("the `rx` handles dropped")
+    ///     println!("the `rx` handles dropped")
     /// }
     /// ```
     pub async fn closed(&self) {
