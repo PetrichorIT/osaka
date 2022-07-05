@@ -226,7 +226,8 @@ pub struct LocalSet {
 }
 
 /// State available from the thread-local.
-struct Context {
+#[derive(Debug)]
+pub(crate) struct Context {
     /// Collection of all active tasks spawned onto this executor.
     owned: LocalOwnedTasks,
 
@@ -241,6 +242,7 @@ struct Context {
     unhandled_panic: Cell<bool>,
 }
 
+#[derive(Debug)]
 /// LocalSet state shared between threads.
 struct Shared {
     /// Remote run queue sender.
@@ -259,7 +261,7 @@ pin_project! {
     }
 }
 
-scoped_thread_local!(static CURRENT: Context);
+scoped_thread_local!(pub(crate) static CURRENT: Context);
 
 /// Spawns a `!Send` future on the local task set.
 ///

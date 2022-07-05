@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 
 /// This type is like VecDeque, except that it is not Sync and can be modified
 /// through immutable references.
+#[derive(Debug)]
 pub(crate) struct VecDequeCell<T> {
     inner: UnsafeCell<VecDeque<T>>,
     _not_sync: PhantomData<*const ()>,

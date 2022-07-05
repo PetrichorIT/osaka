@@ -2,10 +2,12 @@ use super::context::EnterGuard;
 use super::handle::HandleInner;
 use super::task::{self, OwnedTasks, Schedule};
 use crate::sync::notify::Notify;
+use crate::time::TimeDriver;
 use crate::util::atomic_cell::AtomicCell;
 use crate::util::{poll_fn, waker_ref, Wake, WakerRef};
 use crate::{adapter::Mutex, scoped_thread_local, task::JoinHandle};
-use crate::{pin, scope};
+use crate::{pin, scope, tprintln};
+use core::panic;
 use std::sync::atomic::{AtomicBool, Ordering::*};
 use std::task::Poll::*;
 use std::{cell::RefCell, collections::VecDeque, fmt, future::Future, sync::Arc};
@@ -13,6 +15,8 @@ use std::{cell::RefCell, collections::VecDeque, fmt, future::Future, sync::Arc};
 /// Executes tasks on the current thread
 pub(crate) struct BasicScheduler {
     core: AtomicCell<Core>,
+
+    time_driver: AtomicCell<TimeDriver>,
 
     /// Notifier for waking up other threads to steal the
     /// driver.
@@ -50,9 +54,35 @@ impl BasicScheduler {
 
         BasicScheduler {
             core,
+            time_driver: AtomicCell::new(Some(Box::new(TimeDriver::new()))),
             notify: Notify::new(),
             spawner,
             context_guard: None,
+        }
+    }
+
+    pub(crate) fn with_time<R>(&self, f: impl FnOnce() -> R) -> R {
+        if let Some(out_driver) = self.time_driver.take() {
+            let other_driver = TimeDriver::swap_context(out_driver);
+
+            let ret = f();
+
+            if let Some(other_driver) = other_driver {
+                let our_driver =
+                    TimeDriver::swap_context(other_driver).expect("Somebody stole our driver");
+                self.time_driver.set(our_driver);
+            } else {
+                let our_driver = TimeDriver::unset_context();
+                self.time_driver.set(our_driver);
+            }
+            ret
+        } else {
+            if TimeDriver::is_context_set() {
+                tprintln!("Warning: Reusing time driver allready in context, missing own driver.");
+                f()
+            } else {
+                panic!("Not time driver found")
+            }
         }
     }
 
@@ -366,6 +396,26 @@ struct CoreGuard<'a> {
 }
 
 impl CoreGuard<'_> {
+    ///
+    /// Consider this function to behave similar
+    /// to 'block_on' where the future to block on
+    /// dependes on all available tasks in the runtime.
+    ///
+    /// Thereby this function may either succeed with executing
+    /// this imaginary future, or may fall into a deadlock thus
+    /// returning. Since the completion of the imaginary future
+    /// implies that all tasks are resolved, this can be modelled
+    /// as a deadlock, by defining a deadlock as the inability to
+    /// make further progress.
+    ///
+    /// Thereby this function returns once the scheduler queue has
+    /// been emptied.
+    ///
+    /// Note that this function also returns when encountering an
+    /// unhandled panic. This however is not yet indicated by the return
+    /// type and this is only indicated in the core.
+    ///
+    #[track_caller]
     fn poll_until_deadlock(self) {
         scope!("CoreGuard::poll_until_deadlock" => {
             self.enter(|mut core, context| {
@@ -396,19 +446,21 @@ impl CoreGuard<'_> {
                         let task = match entry {
                             Some(entry) => entry,
                             None => {
-                                // TODO does that fix it ?
-                                // core = context.park(core);
+                                // If `entry` is None, the core queue and the spawner queue
+                                // is empty. Since only those queues exists in a single threaded
+                                // runtime, and time sensitive calls to [Waker] are occure
+                                // only by using another [CoreGuard] from a [Runtime]
+                                // this empty status is guaranteed to remaing until this call ends.
 
-                                // This should act as a deadlock detection.
+                                // As told this is very likly a deadlock
+                                // However make another iteration if work was done in this current
+                                // iteration, to perpare for later edge cases and to handle
+                                // unhandled panics
                                 if c == 0  {
                                     return (core, ());
                                 } else {
                                     continue 'outer;
                                 }
-
-
-                                // Try polling the `block_on` future next
-                                // continue 'outer;
                             }
                         };
 

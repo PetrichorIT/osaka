@@ -15,7 +15,10 @@ use std::future::Future;
 
 pub(crate) use enter::enter;
 
-use crate::scope;
+use crate::{
+    scope,
+    time::{SimTime, TimeDriver},
+};
 
 use self::{
     handle::{EnterGuard, Handle},
@@ -70,26 +73,44 @@ impl Runtime {
         F: Future + Send + 'static,
         F::Output: Send + 'static,
     {
-        self.handle.spawn(future)
+        self.with_time(|| self.handle.spawn(future))
+    }
+
+    pub(crate) fn with_time<R>(&self, f: impl FnOnce() -> R) -> R {
+        self.scheduler.with_time(f)
+    }
+
+    pub fn take_timestep(&self) {
+        self.with_time(|| {
+            TimeDriver::with_current(|mut c| c.take_timestep().into_iter().for_each(|w| w.wake()));
+        })
+    }
+
+    pub fn next_wakeup(&self) -> Option<SimTime> {
+        self.with_time(|| TimeDriver::with_current(|c| c.next_wakeup()))
     }
 
     pub fn poll_until_deadlock(&self) {
         scope!("Runtime::poll_until_deadlock" => {
-            self.scheduler.poll_until_deadlock()
+            self.with_time(|| self.scheduler.poll_until_deadlock())
         })
     }
 
     pub fn block_on<F: Future>(&self, future: F) -> F::Output {
         scope!("Runtime::block_on" => {
-            let _enter = self.enter();
-            self.scheduler.block_on(future).expect("'block_on' entcountered deadlock")
+            self.with_time(|| {
+                let _enter = self.enter();
+                self.scheduler.block_on(future).expect("'block_on' entcountered deadlock")
+            })
         })
     }
 
-    pub fn block_on_or_deadline<F: Future>(&self, future: F) -> Result<F::Output, BlockOnError> {
+    pub fn block_on_or_deadlock<F: Future>(&self, future: F) -> Result<F::Output, BlockOnError> {
         scope!("Runtime::block_on" => {
-            let _enter = self.enter();
-            self.scheduler.block_on(future)
+            self.with_time(|| {
+                let _enter = self.enter();
+                self.scheduler.block_on(future)
+            })
         })
     }
 

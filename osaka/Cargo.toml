@@ -6,16 +6,24 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "o-sleep"
-path = "bin/sleep_test.rs"
-
-[[bin]]
 name = "o-rt"
 path = "bin/rt.rs"
 
 [[bin]]
 name = "o-rtc"
 path = "bin/rt-channels.rs"
+
+[[bin]]
+name = "o-sleep"
+path = "bin/time-sleep.rs"
+
+[[bin]]
+name = "o-interval"
+path = "bin/time-interval.rs"
+
+[[bin]]
+name = "o-timeout"
+path = "bin/time-timeout.rs"
 
 [dependencies]
 colored = "2.0.0"

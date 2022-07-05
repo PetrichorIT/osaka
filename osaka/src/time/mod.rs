@@ -14,10 +14,22 @@ mod clock;
 pub use clock::*;
 
 mod driver;
+
 pub use driver::sleep;
 pub use driver::sleep_until;
 pub use driver::Sleep;
-pub use driver::TimeDriver;
+
+pub use driver::interval;
+pub use driver::interval_at;
+pub use driver::Interval;
+pub use driver::MissedTickBehavior;
+
+pub use driver::timeout;
+pub use driver::timeout_at;
+pub use driver::Elapsed;
+pub use driver::Timeout;
+
+pub(crate) use driver::TimeDriver;
 
 use crate::util::SyncWrapper;
 
@@ -119,6 +131,14 @@ impl SimTime {
     pub const MIN: SimTime = SimTime(Duration::ZERO);
     /// The greatest instance of a [SimTime].
     pub const MAX: SimTime = SimTime(Duration::MAX);
+}
+
+// This provides non-mutable functionality like as_secs()
+impl Deref for SimTime {
+    type Target = Duration;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 // CMP

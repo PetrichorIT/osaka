@@ -29,6 +29,6 @@ fn main() {
     if c <= 3 {
         assert_eq!(exec.block_on(h2).unwrap(), 42)
     } else {
-        assert!(exec.block_on_or_deadline(h2).is_err())
+        assert!(exec.block_on_or_deadlock(h2).is_err())
     };
 }

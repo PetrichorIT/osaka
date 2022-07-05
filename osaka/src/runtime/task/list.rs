@@ -43,6 +43,7 @@ pub(crate) struct OwnedTasks {
     inner: Mutex<OwnedTasksInner>,
     id: u64,
 }
+#[derive(Debug)]
 pub(crate) struct LocalOwnedTasks {
     inner: UnsafeCell<OwnedTasksInner>,
     id: u64,

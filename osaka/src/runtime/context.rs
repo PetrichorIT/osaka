@@ -7,7 +7,7 @@ use super::{
 use std::cell::RefCell;
 
 thread_local! {
-    static CONTEXT: RefCell<Option<Handle>> = RefCell::new(None);
+    pub(crate) static CONTEXT: RefCell<Option<Handle>> = RefCell::new(None);
 }
 
 pub(crate) fn try_current() -> Result<Handle, TryCurrentError> {

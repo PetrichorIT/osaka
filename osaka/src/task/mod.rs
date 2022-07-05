@@ -291,7 +291,7 @@ pub use spawn::spawn;
 mod yield_now;
 pub use yield_now::yield_now;
 
-mod local;
+pub(crate) mod local;
 pub use local::{spawn_local, LocalSet};
 
 mod task_local;
